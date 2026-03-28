@@ -1,54 +1,90 @@
 # style-gallery
 
-`style-gallery` la mot thu vien tham khao UI style duoc xay dung bang React + TypeScript + Vite. Muc tieu cua du an la cho phep ban duyet nhanh nhieu visual direction khac nhau tren cung mot "product world" de so sanh style, prompt, metadata ky thuat va chat luong trinh bay trong mot giao dien gallery duy nhat.
+`style-gallery` is a React + TypeScript + Vite reference library for exploring UI styles across a shared product world.
 
-## Du an nay dang lam gi
+Instead of browsing disconnected screenshots, the app lets you compare many visual directions against the same product narrative, inspect their metadata, preview full demo pages, open the source code behind each demo, and generate reusable prompts from selected style implementations.
 
-Thay vi chi liet ke ten style, app nay:
+## What this project does
 
-- Hien thi danh sach cac style UI co the tim kiem va loc.
-- Dinh nghia metadata cho tung style: keywords, mau sac, performance, accessibility, mobile friendliness, do phuc tap, AI prompt, CSS keywords.
-- Render preview cho tung style bang demo component rieng de ban thay duoc style do trong boi canh landing page, dashboard hoac giao dien san pham.
-- Giu mot content universe kha dong nhat (`ViCode`) de viec so sanh giua cac style de dang hon, khong bi nhieu do noise tu content.
+This project is designed as a design research and prompt engineering playground.
 
-## Cau truc chinh
+It currently allows you to:
+
+- Browse a large UI style catalog with search and filtering.
+- Compare different visual languages using the same fictional product universe: `ViCode`.
+- Preview each style inside a browser-like frame.
+- Switch the preview viewport between desktop, tablet, and mobile.
+- Pin favorite styles in the sidebar and persist them with `localStorage`.
+- Open the source code for a demo in a modal with line numbers, copy, and download actions.
+- Generate prompts from live demo code for supported styles in two modes:
+  - `Recreate Exactly`
+  - `Adapt This Style`
+
+## Core idea
+
+The app keeps the product/content layer relatively stable so the comparison is about design language, not content noise.
+
+That makes it useful for:
+
+- visual benchmarking
+- prompt writing for design/code models
+- design direction reviews
+- UI experimentation
+- teaching or documenting style systems
+
+## Main structure
 
 ```text
 src/
-  App.tsx                     # state chinh, search/filter, layout tong
+  App.tsx                     # top-level app state and layout
   data/styles.ts              # style catalog metadata
   components/
-    Sidebar.tsx               # danh sach style, search, filter
-    demoRegistry.ts           # lazy registry cho 67 demo preview
-    StylePreview.tsx          # khung preview, details panel, suspense fallback
-    demos/*.tsx               # preview rieng cho tung style
-  index.css                   # Tailwind v4 theme tokens + base styles
+    Sidebar.tsx               # library browsing, favorites, search, filters
+    demoRegistry.ts           # lazy registry for demo previews and source loading
+    StylePreview.tsx          # preview shell, viewport switching, code/prompt modals
+    demos/*.tsx               # one demo implementation per style
+  lib/
+    generated-prompts.ts      # prompt generation from demo source
+  index.css                   # Tailwind v4 base styles and tokens
 ```
 
-## Nhom style hien co
+## Current feature set
 
-Hien tai gallery dang bao gom 67 style, chia thanh 3 nhom chinh:
+- Search by style name or keywords.
+- Filter by light/dark support.
+- Filter by style category.
+- Pin favorite styles and keep them across reloads.
+- Lazy-load demo components to reduce initial bundle cost.
+- Render previews in an iframe-based viewport so responsive breakpoints behave like real device widths.
+- Open demo code in a styled viewer with syntax highlighting, line numbers, copy, and download.
+- Generate prompts directly from demo source code for supported styles.
+
+## Style groups
+
+The gallery currently includes 67 styles across 3 main groups:
 
 - `General`
 - `Landing Page`
 - `BI/Analytics`
 
-Mot vai vi du tieu bieu:
+Some example entries:
 
 - Minimalism & Swiss Style
+- Neumorphism
+- Aurora UI
 - Hero-Centric Design
-- Data-Dense Dashboard
 - AI-Native UI
 - Vintage Analog / Retro Film
 
-## Cach no hoat dong
+## How it works
 
-1. `src/data/styles.ts` chua metadata cua toan bo style library.
-2. `src/App.tsx` quan ly style dang duoc chon cung search va filter.
-3. `src/components/Sidebar.tsx` cho phep duyet thu vien theo tu khoa, light/dark support va type.
-4. `src/components/demoRegistry.ts` map `style.no` sang demo component duoc lazy-load bang `import.meta.glob`.
-5. `src/components/StylePreview.tsx` render demo tuong ung, fallback trong luc load va panel thong tin ky thuat cho style dang xem.
-6. Moi file trong `src/components/demos/` la mot mockup/doc lap the hien visual language rieng.
+1. `src/data/styles.ts` stores the metadata for the style catalog.
+2. `src/App.tsx` manages the selected style, filters, and favorites.
+3. `src/components/Sidebar.tsx` handles browsing, filtering, and pinned styles.
+4. `src/components/demoRegistry.ts` maps `style.no` to lazy-loaded demo components and source files.
+5. `src/components/StylePreview.tsx` renders the active demo, device viewport controls, and code/prompt modals.
+6. `src/lib/generated-prompts.ts` builds structured prompts from live demo source for supported styles.
+7. Each file in `src/components/demos/` is a standalone visual implementation of one style.
 
 ## Tech stack
 
@@ -56,36 +92,39 @@ Mot vai vi du tieu bieu:
 - TypeScript
 - Vite 8
 - Tailwind CSS 4
-- shadcn/base-nova
 - Lucide React
+- shadcn / Base UI primitives
 - Geist Variable font
 
-## Chay local
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Mo `http://localhost:5173` trong trinh duyet.
+Then open:
 
-## Build production
+```text
+http://localhost:5173
+```
+
+## Production build
 
 ```bash
 npm run build
 ```
 
-Ban build se tao output trong thu muc `dist/`.
+The production output is generated in `dist/`.
 
-## Ghi chu ve TypeScript config
+## TypeScript note
 
-Project nay van giu `strict`, `noUnusedLocals` va `noUnusedParameters` o muc bat de tranh code demo bi tich tu import/state thua theo thoi gian.
+The project keeps strict TypeScript checks enabled, including unused locals and unused parameters, so demo files do not accumulate dead imports or abandoned state over time.
 
-Neu sau nay ban prototype nhanh mot nhom style moi, co the tam thoi noi rule trong luc sketching, nhung nen don lai truoc khi merge de giu build on dinh.
+## Suggested next steps
 
-## Huong phat trien hop ly tiep theo
-
-- Noi nut `Prompt`, `Open`, `Get System` voi logic that su.
-- Can nhac gom cac micro-chunk icon/vendor neu ban muon toi uu hon nua cho network waterfall.
-- Them screenshot thumbnail hoac cover image cho moi style trong sidebar.
-- Viet README cho tung nhom style neu muon bien repo nay thanh design research library ro rang hon.
+- Expand source-based prompt generation to the remaining unsupported styles.
+- Add thumbnail covers for each style in the sidebar.
+- Introduce compare mode for side-by-side style review.
+- Add export options for design tokens or starter code.
+- Continue improving bundle chunking if you want to optimize the large main chunk further.
