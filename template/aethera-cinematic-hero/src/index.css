@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@import "./styles/fonts.css";
+@import "./styles/theme.css";
+
+@theme {
+  --font-display: "Instrument Serif", serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-background: #FFFFFF;
+  --color-foreground: #000000;
+  --color-muted: #6F6F6F;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

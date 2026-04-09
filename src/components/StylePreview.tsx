@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { demoRegistry, getDemoSource } from "@/components/demoRegistry";
-import { type Style } from "@/data/styles";
+import { isExternalStyle, type Style } from "@/data/styles";
 import {
     getGeneratedPromptDescription,
     generatePromptFromCode,
@@ -12,6 +12,7 @@ import {
 } from "@/lib/generated-prompts";
 import { cn } from "@/lib/utils";
 import {
+    ArrowUpRight,
     ChevronLeft,
     ChevronRight,
     Code as CodeIcon,
@@ -283,6 +284,20 @@ const DemoViewport: React.FC<{
     );
 };
 
+const HostedSiteViewport: React.FC<{
+    src: string;
+    styleName: string;
+}> = ({ src, styleName }) => (
+    <div className="flex-1 min-h-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.07),transparent_55%)]">
+        <iframe
+            title={`${styleName} hosted preview`}
+            className="h-full w-full bg-white"
+            src={src}
+            loading="lazy"
+        />
+    </div>
+);
+
 export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
     const [isGettingCode, setIsGettingCode] = useState(false);
     const [isPreparingPrompt, setIsPreparingPrompt] = useState(false);
@@ -291,6 +306,7 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
     const [isCopyingCode, setIsCopyingCode] = useState(false);
     const [isCopyingPrompt, setIsCopyingPrompt] = useState(false);
     const [isCopyingGeneratedPrompt, setIsCopyingGeneratedPrompt] = useState(false);
+    const [isCopyingHostedUrl, setIsCopyingHostedUrl] = useState(false);
     const [codePreview, setCodePreview] = useState<{ code: string; fileName: string } | null>(null);
     const [promptPreview, setPromptPreview] = useState<{ code: string; fileName: string } | null>(null);
     const [promptMode, setPromptMode] = useState<PromptGenerationMode>("recreate");
@@ -303,11 +319,16 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
     const hexMatch = style.primaryColors.match(/#[A-Fa-f0-9]{6}/);
     const primaryColor = hexMatch ? hexMatch[0] : "#333";
     const DemoComponent = demoRegistry[style.no];
+    const hostedSite = isExternalStyle(style) ? style.externalSite : null;
+    const isHostedPreview = Boolean(hostedSite);
     const supportsCodeGeneratedPrompt = supportsGeneratedPrompt(style.no);
     const activePreviewDevice = useMemo(
         () => previewDevices.find((item) => item.id === previewDevice) ?? previewDevices[0],
         [previewDevice]
     );
+    const previewAddress = hostedSite
+        ? hostedSite.previewUrl
+        : `stylelibrary.dev/preview/${style.name.toLowerCase().replace(/\s+/g, "-")}?viewport=${activePreviewDevice.id}`;
     const codeLines = useMemo(
         () => (codePreview ? codePreview.code.replace(/\r\n/g, "\n").split("\n") : []),
         [codePreview]
@@ -419,6 +440,22 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
         }
     };
 
+    const handleCopyHostedUrl = async () => {
+        if (!hostedSite) {
+            return;
+        }
+
+        setIsCopyingHostedUrl(true);
+
+        try {
+            const liveUrl = new URL(hostedSite.liveUrl, window.location.origin).toString();
+
+            await navigator.clipboard.writeText(liveUrl);
+        } finally {
+            window.setTimeout(() => setIsCopyingHostedUrl(false), 1200);
+        }
+    };
+
     const handleDownloadCode = () => {
         if (!codePreview) {
             return;
@@ -467,6 +504,7 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
         setIsCopyingCode(false);
         setIsCopyingPrompt(false);
         setIsCopyingGeneratedPrompt(false);
+        setIsCopyingHostedUrl(false);
     }, [style.no]);
 
     return (
@@ -494,6 +532,11 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
                             <Badge variant="outline" className="text-[7px] bg-white/10 border-white/20 text-white/60 px-1 py-0 uppercase tracking-widest font-bold h-3.5 leading-none">
                                 #{style.no.toString().padStart(2, "0")}
                             </Badge>
+                            {isHostedPreview ? (
+                                <Badge variant="outline" className="text-[7px] bg-emerald-400/10 border-emerald-300/20 text-emerald-200 px-1.5 py-0 uppercase tracking-widest font-bold h-3.5 leading-none">
+                                    Hosted
+                                </Badge>
+                            ) : null}
                         </h2>
                         <p className="text-[9px] text-white/50 truncate max-sm:max-w-[120px] font-bold uppercase tracking-[0.2em] mt-0.5">
                             {style.keywords}
@@ -511,31 +554,60 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
                         </Button>
                     </div>
 
-                    <Button
-                        size="sm"
-                        onClick={handlePromptAction}
-                        disabled={supportsCodeGeneratedPrompt ? isPreparingPrompt : isCopyingPrompt}
-                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] gap-2 h-8 px-3 font-bold uppercase tracking-widest disabled:opacity-60"
-                    >
-                        <Copy className="w-3 h-3" />
-                        {supportsCodeGeneratedPrompt
-                            ? isPreparingPrompt
-                                ? "Generating..."
-                                : "Prompt"
-                            : isCopyingPrompt
-                                ? "Copied"
-                                : "Prompt"}
-                    </Button>
+                    {isHostedPreview && hostedSite ? (
+                        <>
+                            <Button
+                                size="sm"
+                                onClick={handleCopyHostedUrl}
+                                disabled={isCopyingHostedUrl}
+                                className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] gap-2 h-8 px-3 font-bold uppercase tracking-widest disabled:opacity-60"
+                            >
+                                <Copy className="w-3 h-3" />
+                                {isCopyingHostedUrl ? "Copied" : "Copy Url"}
+                            </Button>
 
-                    <Button
-                        size="sm"
-                        onClick={handleGetCode}
-                        disabled={isGettingCode}
-                        className="bg-white hover:bg-white/90 text-black text-[10px] gap-2 h-8 px-4 font-black uppercase tracking-widest disabled:opacity-60"
-                    >
-                        <CodeIcon className="w-3 h-3" />
-                        {isGettingCode ? "Preparing..." : "Get Code"}
-                    </Button>
+                            <a
+                                href={hostedSite.liveUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={cn(
+                                    buttonVariants({ size: "sm" }),
+                                    "bg-white hover:bg-white/90 text-black text-[10px] gap-2 h-8 px-4 font-black uppercase tracking-widest"
+                                )}
+                            >
+                                <ArrowUpRight className="w-3 h-3" />
+                                Open Site
+                            </a>
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                size="sm"
+                                onClick={handlePromptAction}
+                                disabled={supportsCodeGeneratedPrompt ? isPreparingPrompt : isCopyingPrompt}
+                                className="bg-white/5 hover:bg-white/10 text-white border border-white/10 text-[10px] gap-2 h-8 px-3 font-bold uppercase tracking-widest disabled:opacity-60"
+                            >
+                                <Copy className="w-3 h-3" />
+                                {supportsCodeGeneratedPrompt
+                                    ? isPreparingPrompt
+                                        ? "Generating..."
+                                        : "Prompt"
+                                    : isCopyingPrompt
+                                        ? "Copied"
+                                        : "Prompt"}
+                            </Button>
+
+                            <Button
+                                size="sm"
+                                onClick={handleGetCode}
+                                disabled={isGettingCode}
+                                className="bg-white hover:bg-white/90 text-black text-[10px] gap-2 h-8 px-4 font-black uppercase tracking-widest disabled:opacity-60"
+                            >
+                                <CodeIcon className="w-3 h-3" />
+                                {isGettingCode ? "Preparing..." : "Get Code"}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -554,10 +626,10 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
                         </div>
 
                         <div className="min-w-0 flex justify-center">
-                            <div className="min-w-0 w-full max-w-sm h-5 bg-white/80 border border-black/5 rounded flex items-center px-3 gap-2 text-[9px] text-black/30">
-                                <Lock className="w-2 h-2 text-black/20" />
+                            <div className="min-w-0 w-full max-w-sm h-5 rounded border border-black/10 bg-white px-3 gap-2 text-[9px] text-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] flex items-center">
+                                <Lock className="w-2 h-2 text-black/35" />
                                 <span className="truncate">
-                                    stylelibrary.dev/preview/{style.name.toLowerCase().replace(/\s+/g, "-")}?viewport={activePreviewDevice.id}
+                                    {previewAddress}
                                 </span>
                             </div>
                         </div>
@@ -588,15 +660,19 @@ export const StylePreview: React.FC<StylePreviewProps> = ({ style }) => {
                         </div>
                     </div>
 
-                    <DemoViewport device={previewDevice} styleName={style.name}>
-                        {DemoComponent ? (
-                            <Suspense fallback={<DemoLoadingFallback style={style} primaryColor={primaryColor} />}>
-                                <DemoComponent />
-                            </Suspense>
-                        ) : (
-                            <GenericDemoFallback style={style} />
-                        )}
-                    </DemoViewport>
+                    {isHostedPreview && hostedSite ? (
+                        <HostedSiteViewport src={hostedSite.previewUrl} styleName={style.name} />
+                    ) : (
+                        <DemoViewport device={previewDevice} styleName={style.name}>
+                            {DemoComponent ? (
+                                <Suspense fallback={<DemoLoadingFallback style={style} primaryColor={primaryColor} />}>
+                                    <DemoComponent />
+                                </Suspense>
+                            ) : (
+                                <GenericDemoFallback style={style} />
+                            )}
+                        </DemoViewport>
+                    )}
                 </div>
             </div>
 

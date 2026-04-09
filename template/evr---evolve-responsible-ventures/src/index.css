@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Gilda+Display&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Gilda Display", serif;
+
+  --color-background: hsl(0 0% 0%);
+  --color-foreground: hsl(0 0% 100%);
+
+  --animate-marquee: marquee 20s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+  }
+}

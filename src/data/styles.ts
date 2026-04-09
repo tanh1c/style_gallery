@@ -1,3 +1,10 @@
+export interface ExternalSiteConfig {
+  slug: string;
+  previewUrl: string;
+  liveUrl: string;
+  description: string;
+}
+
 export interface Style {
   no: number;
   name: string;
@@ -18,7 +25,14 @@ export interface Style {
   complexity: string;
   aiPrompt: string;
   cssKeywords: string;
+  source?: "internal" | "external";
+  externalSite?: ExternalSiteConfig;
 }
+
+export const isExternalStyle = (
+  style: Style
+): style is Style & { source: "external"; externalSite: ExternalSiteConfig } =>
+  style.source === "external" && Boolean(style.externalSite);
 
 export const styles: Style[] = [
   { no: 1, name: "Minimalism & Swiss Style", type: "General", keywords: "Clean, simple, spacious, functional, white space", primaryColors: "Monochromatic, Black #000000, White #FFFFFF", secondaryColors: "Neutral (Beige, Grey, Taupe)", effects: "Subtle hover, smooth transitions", bestFor: "Enterprise apps, dashboards, SaaS", doNotUseFor: "Creative portfolios, entertainment", lightMode: "✓ Full", darkMode: "✓ Full", performance: "⚡ Excellent", accessibility: "✓ WCAG AAA", mobileFriendly: "✓ High", conversionFocused: "◐ Medium", era: "1950s Swiss", complexity: "Low", aiPrompt: "Minimalist landing page with white space, geometric layouts, sans-serif fonts", cssKeywords: "grid, gap: 2rem, sans-serif, #000/#FFF" },

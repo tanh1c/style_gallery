@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", serif;
+
+  --color-bg: hsl(0 0% 4%);
+  --color-surface: hsl(0 0% 8%);
+  --color-text-primary: hsl(0 0% 96%);
+  --color-muted: hsl(0 0% 53%);
+  --color-stroke: hsl(0 0% 12%);
+  --color-accent: hsl(0 0% 96%);
+
+  --animate-scroll-down: scroll-down 1.5s ease-in-out infinite;
+  --animate-role-fade-in: role-fade-in 0.4s ease-out;
+  --animate-gradient-shift: gradient-shift 6s ease infinite;
+
+  @keyframes scroll-down {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(200%); }
+  }
+
+  @keyframes role-fade-in {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}
+
+@layer utilities {
+  .accent-gradient {
+    background: linear-gradient(90deg, #89AACC 0%, #4E85BF 100%);
+  }
+
+  .blur-in {
+    opacity: 0;
+    filter: blur(10px);
+    transform: translateY(20px);
+  }
+
+  .name-reveal {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+}
+
+body {
+  @apply bg-bg text-text-primary font-body antialiased selection:bg-text-primary selection:text-bg;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-stroke rounded-full hover:bg-muted transition-colors;
+}

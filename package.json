@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:showcase": "node ./scripts/prepare-external-sites.mjs --incremental && vite",
+    "prepare:external-sites": "node ./scripts/prepare-external-sites.mjs --incremental",
+    "prepare:external-sites:fresh": "node ./scripts/prepare-external-sites.mjs --force",
+    "build": "node ./scripts/prepare-external-sites.mjs --force && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

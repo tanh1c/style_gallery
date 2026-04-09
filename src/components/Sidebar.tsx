@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils";
 import { Moon,Search,Star,Sun } from "lucide-react";
 import React, { useMemo } from "react";
 
+export type LibraryTab = "styles" | "hosted";
+
 interface SidebarProps {
+    libraryTab: LibraryTab;
+    onLibraryTabChange: (tab: LibraryTab) => void;
+    internalCount: number;
+    hostedCount: number;
     styles: Style[];
     selectedStyle: Style | null;
     onSelectStyle: (style: Style) => void;
@@ -16,10 +22,13 @@ interface SidebarProps {
     onFilterTypeChange: (type: "All" | "General" | "Landing Page" | "BI/Analytics") => void;
     favoriteStyleNos: number[];
     onToggleFavorite: (styleNo: number) => void;
-    totalCount: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
+    libraryTab,
+    onLibraryTabChange,
+    internalCount,
+    hostedCount,
     styles,
     selectedStyle,
     onSelectStyle,
@@ -33,14 +42,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onToggleFavorite,
 }) => {
     const favoriteStyleSet = useMemo(() => new Set(favoriteStyleNos), [favoriteStyleNos]);
+    const hostedStyles = useMemo(
+        () => styles.filter((style) => style.source === "external"),
+        [styles]
+    );
+    const internalStyles = useMemo(
+        () => styles.filter((style) => style.source !== "external"),
+        [styles]
+    );
     const pinnedStyles = useMemo(
-        () => styles.filter((style) => favoriteStyleSet.has(style.no)),
-        [favoriteStyleSet, styles]
+        () => internalStyles.filter((style) => favoriteStyleSet.has(style.no)),
+        [favoriteStyleSet, internalStyles]
     );
     const unpinnedStyles = useMemo(
-        () => styles.filter((style) => !favoriteStyleSet.has(style.no)),
+        () => internalStyles.filter((style) => !favoriteStyleSet.has(style.no)),
+        [favoriteStyleSet, internalStyles]
+    );
+    const favoriteCount = useMemo(
+        () => styles.filter((style) => favoriteStyleSet.has(style.no)).length,
         [favoriteStyleSet, styles]
     );
+    const activeCountLabel = libraryTab === "hosted"
+        ? `Hosted (${styles.length}/${hostedCount})`
+        : `Library (${styles.length}/${internalCount})`;
 
     const renderStyleItem = (style: Style) => {
         const hexMatch = style.primaryColors.match(/#[A-Fa-f0-9]{6}/);
@@ -95,6 +119,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             >
                                 {style.type}
                             </span>
+                            {style.source === "external" ? (
+                                <span className="text-[8px] uppercase tracking-[0.28em] font-black text-emerald-300/80">
+                                    Hosted
+                                </span>
+                            ) : null}
                             {isFavorite ? (
                                 <span className="text-[8px] uppercase tracking-[0.28em] font-black text-[#FACC15]/80">
                                     Pinned
@@ -133,6 +162,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
         );
     };
 
+    const renderSection = (
+        title: string,
+        items: Style[],
+        options?: {
+            countLabel?: string;
+            tone?: "default" | "hosted" | "pinned";
+            compact?: boolean;
+        }
+    ) => {
+        if (items.length === 0) {
+            return null;
+        }
+
+        const toneClassName =
+            options?.tone === "hosted"
+                ? "text-emerald-300/70"
+                : options?.tone === "pinned"
+                    ? "text-[#FACC15]/55"
+                    : "text-white/18";
+
+        return (
+            <div className={cn("space-y-1", options?.compact && "space-y-2")}>
+                <div className="px-2 pt-1 pb-2 flex items-center justify-between gap-2">
+                    <span className={cn("text-[9px] uppercase tracking-[0.28em] font-black", toneClassName)}>
+                        {title}
+                    </span>
+                    {options?.countLabel ? (
+                        <span className="text-[8px] uppercase tracking-[0.24em] font-black text-white/16">
+                            {options.countLabel}
+                        </span>
+                    ) : null}
+                </div>
+                {items.map(renderStyleItem)}
+            </div>
+        );
+    };
+
     return (
         <div className="w-[320px] bg-[#0c0c0c] border-r border-white/5 flex flex-col h-full overflow-hidden select-none">
             <div className="p-6 space-y-5">
@@ -153,6 +219,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </p>
 
                 <div className="space-y-4">
+                    <div className="flex gap-1.5 p-1 bg-white/5 rounded-xl">
+                        {([
+                            {
+                                id: "styles" as const,
+                                label: "UI Styles",
+                                count: internalCount
+                            },
+                            {
+                                id: "hosted" as const,
+                                label: "Hosted Webs",
+                                count: hostedCount
+                            }
+                        ]).map((tab) => (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => onLibraryTabChange(tab.id)}
+                                className={cn(
+                                    "flex-1 px-3 py-2 rounded-lg transition-all text-left",
+                                    libraryTab === tab.id
+                                        ? "bg-white text-black shadow-lg"
+                                        : "text-white/40 hover:text-white/80 hover:bg-white/[0.03]"
+                                )}
+                            >
+                                <div className="text-[10px] font-black uppercase tracking-[0.24em]">
+                                    {tab.label}
+                                </div>
+                                <div
+                                    className={cn(
+                                        "text-[9px] mt-1 font-bold uppercase tracking-[0.18em]",
+                                        libraryTab === tab.id ? "text-black/55" : "text-white/20"
+                                    )}
+                                >
+                                    {tab.count} items
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
                         <Input
@@ -204,11 +309,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex-1 flex flex-col min-h-0 bg-white/[0.01]">
                 <div className="px-6 py-3 border-y border-white/5 flex items-center justify-between shrink-0">
                     <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/20">
-                        Library ({styles.length})
+                        {activeCountLabel}
                     </span>
-                    {pinnedStyles.length > 0 ? (
+                    {libraryTab === "styles" && favoriteCount > 0 ? (
                         <span className="text-[9px] uppercase font-black tracking-[0.24em] text-[#FACC15]/70">
-                            Pinned ({pinnedStyles.length})
+                            Pinned ({favoriteCount})
                         </span>
                     ) : null}
                 </div>
@@ -216,25 +321,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Fixed Scrollable Area */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
                     <div className="p-3 space-y-4">
-                        {pinnedStyles.length > 0 ? (
-                            <div className="space-y-1">
-                                <div className="px-2 pt-1 pb-2 text-[9px] uppercase tracking-[0.28em] font-black text-[#FACC15]/55">
-                                    Pinned Styles
+                        {libraryTab === "hosted" ? (
+                            hostedStyles.length > 0 ? (
+                                <div className="rounded-2xl border border-emerald-300/10 bg-emerald-400/[0.03] p-2">
+                                    {renderSection("Hosted Templates", hostedStyles, {
+                                        countLabel: `${hostedStyles.length} sites`,
+                                        tone: "hosted",
+                                        compact: true
+                                    })}
                                 </div>
-                                {pinnedStyles.map(renderStyleItem)}
-                            </div>
-                        ) : null}
+                            ) : null
+                        ) : (
+                            <>
+                                {renderSection("Pinned Styles", pinnedStyles, {
+                                    countLabel: `${pinnedStyles.length} saved`,
+                                    tone: "pinned"
+                                })}
 
-                        {unpinnedStyles.length > 0 ? (
-                            <div className="space-y-1">
-                                {pinnedStyles.length > 0 ? (
-                                    <div className="px-2 pt-2 pb-2 text-[9px] uppercase tracking-[0.28em] font-black text-white/18">
-                                        All Styles
-                                    </div>
-                                ) : null}
-                                {unpinnedStyles.map(renderStyleItem)}
-                            </div>
-                        ) : null}
+                                {renderSection("Style Library", unpinnedStyles, {
+                                    countLabel: `${unpinnedStyles.length} items`,
+                                    tone: "default"
+                                })}
+                            </>
+                        )}
 
                         {styles.length === 0 ? (
                             <div className="px-4 py-10 text-center rounded-xl border border-white/5 bg-white/[0.02]">

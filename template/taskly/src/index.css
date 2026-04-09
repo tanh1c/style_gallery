@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Fustat:wght@700&family=Inter:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-fustat: "Fustat", sans-serif;
+  --font-inter: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-slate-900 bg-white;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

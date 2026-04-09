@@ -1,0 +1,125 @@
+import { Suspense, lazy } from 'react';
+import { motion } from 'motion/react';
+import { Snowflake, Maximize, Zap } from 'lucide-react';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
+
+export default function App() {
+  return (
+    <main className="min-h-screen bg-black text-white overflow-x-hidden relative selection:bg-white selection:text-black font-sans">
+      {/* 3D Spline Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <Suspense fallback={<div className="w-full h-full bg-black" />}>
+          <div 
+            className="w-full h-full" 
+            style={{ transform: 'translateX(15%)' }}
+          >
+            <Spline scene="https://prod.spline.design/PIgTjpRFA03yfLyK/scene.splinecode" />
+          </div>
+        </Suspense>
+      </div>
+
+      {/* Main Content Layer */}
+      <div className="relative z-10 pointer-events-none mx-auto px-4 md:px-6 pt-6 md:pt-10 min-h-screen md:h-screen flex flex-col justify-between pb-6 max-w-7xl">
+        
+        {/* TOP SECTION */}
+        <div className="space-y-6 md:space-y-8 mt-12 md:mt-0">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="max-w-xl"
+          >
+            <h1 className="font-display text-[40px] sm:text-[56px] md:text-[72px] leading-[1] md:leading-[0.9] font-extralight tracking-tight uppercase bg-gradient-to-r from-white/20 via-white/70 to-white bg-clip-text text-transparent">
+              Automation<br />
+              Machines &bull;
+            </h1>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-sm text-white/80 max-w-md leading-relaxed font-light"
+          >
+            Developed with high-end skills and a pixel-perfect frame for those who don't just browse the web—they build it. Code your dreams into reality with our next-generation automation framework.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex gap-4 pointer-events-auto"
+          >
+            {[Snowflake, Maximize, Zap].map((Icon, idx) => (
+              <div 
+                key={idx}
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/60 transition-colors cursor-pointer"
+              >
+                <Icon size={16} className="text-white/80" />
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* BOTTOM SECTION */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 md:gap-0 mt-16 md:mt-0">
+          
+          {/* Left Side: Technical Specs */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="w-full md:max-w-md pointer-events-auto"
+          >
+            <div className="p-6 md:p-8 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10">
+              <h3 className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/60 mb-5">
+                Technical Specs
+              </h3>
+              <div className="space-y-4">
+                {[
+                  { label: "Stack", value: "React + Node + SQL" },
+                  { label: "Logic", value: "V8 - Runtime Logic" },
+                  { label: "Uptime", value: "99.9% High-Avail" },
+                  { label: "Scale", value: "Responsive Modern Layout" }
+                ].map((spec, idx) => (
+                  <div key={idx} className="flex justify-between items-end border-b border-white/10 pb-3 group cursor-default">
+                    <span className="text-xs text-white/70 group-hover:text-white transition-colors">
+                      {spec.label}
+                    </span>
+                    <span className="text-xs font-mono tracking-tight text-white">
+                      {spec.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Right Side: Pill Badge Bar */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 1 }}
+            className="flex items-center w-full md:w-auto"
+          >
+            <div className="flex flex-wrap gap-2 bg-white/10 backdrop-blur-md rounded-2xl md:rounded-full p-2 border border-white/5 w-full md:w-auto pointer-events-auto">
+              <span className="px-4 py-2 text-[10px] font-mono tracking-widest bg-white text-black rounded-full">
+                TS/JS
+              </span>
+              <span className="px-3 py-2 text-[10px] font-mono tracking-widest border border-white/20 rounded-full text-white/80">
+                V1
+              </span>
+              <span className="px-4 py-2 text-[10px] font-mono tracking-widest border border-white/20 rounded-full text-white/80">
+                Full-Stack
+              </span>
+              <span className="px-4 py-2 text-[10px] font-mono tracking-widest border border-white/20 rounded-full text-white/80">
+                Cloud-Ready
+              </span>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </main>
+  );
+}
